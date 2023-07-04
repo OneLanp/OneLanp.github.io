@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>FMD初探 - 三季的技术博客</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="三季的技术博客"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="三季的技术博客"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="前言 1. 概述 1.1 学习环境 1.2 学习任务   2. System Init 2.1 OSCCON寄存器配置 - 初始化系统时钟 2.2 GPIO寄存器配置 -  初始化GPIO    前言 之前学习过51单片机，故寻找一个类似的8位单片机进行开发，FMD是国产的可擦写、RISC-V架构的8Bit单片机，价格低廉的同时具备比较丰富的外设，使用场景大都在小家电产品、太阳能控制板等小型程序"><meta property="og:type" content="blog"><meta property="og:title" content="FMD初探"><meta property="og:url" content="http://example.com/2023/07/04/FMD%E5%88%9D%E6%8E%A2/"><meta property="og:site_name" content="三季的技术博客"><meta property="og:description" content="前言 1. 概述 1.1 学习环境 1.2 学习任务   2. System Init 2.1 OSCCON寄存器配置 - 初始化系统时钟 2.2 GPIO寄存器配置 -  初始化GPIO    前言 之前学习过51单片机，故寻找一个类似的8位单片机进行开发，FMD是国产的可擦写、RISC-V架构的8Bit单片机，价格低廉的同时具备比较丰富的外设，使用场景大都在小家电产品、太阳能控制板等小型程序"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://example.com/img/og_image.png"><meta property="article:published_time" content="2023-07-04T07:10:44.000Z"><meta property="article:modified_time" content="2023-07-04T12:58:19.533Z"><meta property="article:author" content="三季"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="http://example.com/img/og_image.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2023/07/04/FMD%E5%88%9D%E6%8E%A2/"},"headline":"FMD初探","image":["http://example.com/img/og_image.png"],"datePublished":"2023-07-04T07:10:44.000Z","dateModified":"2023-07-04T12:58:19.533Z","author":{"@type":"Person","name":"三季"},"publisher":{"@type":"Organization","name":"三季的技术博客","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"前言 1. 概述 1.1 学习环境 1.2 学习任务   2. System Init 2.1 OSCCON寄存器配置 - 初始化系统时钟 2.2 GPIO寄存器配置 -  初始化GPIO    前言 之前学习过51单片机，故寻找一个类似的8位单片机进行开发，FMD是国产的可擦写、RISC-V架构的8Bit单片机，价格低廉的同时具备比较丰富的外设，使用场景大都在小家电产品、太阳能控制板等小型程序"}</script><link rel="canonical" href="http://example.com/2023/07/04/FMD%E5%88%9D%E6%8E%A2/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>FMD初探 - 三季的技术博客</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="三季的技术博客"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="三季的技术博客"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="前言 1. 概述 1.1 学习环境 1.2 学习任务   2. System Init 2.1 OSCCON寄存器配置 - 初始化系统时钟 2.2 GPIO寄存器配置 -  初始化GPIO 2.3 MSCKCON寄存器配置 2.4 CMCONx，x &amp;#x3D; [0, 1] 寄存器配置    前言 之前学习过51单片机，故寻找一个类似的8位单片机进行开发，FMD是国产的可擦写、RISC-V架构"><meta property="og:type" content="blog"><meta property="og:title" content="FMD初探"><meta property="og:url" content="http://example.com/2023/07/04/FMD%E5%88%9D%E6%8E%A2/"><meta property="og:site_name" content="三季的技术博客"><meta property="og:description" content="前言 1. 概述 1.1 学习环境 1.2 学习任务   2. System Init 2.1 OSCCON寄存器配置 - 初始化系统时钟 2.2 GPIO寄存器配置 -  初始化GPIO 2.3 MSCKCON寄存器配置 2.4 CMCONx，x &amp;#x3D; [0, 1] 寄存器配置    前言 之前学习过51单片机，故寻找一个类似的8位单片机进行开发，FMD是国产的可擦写、RISC-V架构"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://example.com/img/og_image.png"><meta property="article:published_time" content="2023-07-04T07:10:44.000Z"><meta property="article:modified_time" content="2023-07-04T15:32:01.808Z"><meta property="article:author" content="三季"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="http://example.com/img/og_image.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2023/07/04/FMD%E5%88%9D%E6%8E%A2/"},"headline":"FMD初探","image":["http://example.com/img/og_image.png"],"datePublished":"2023-07-04T07:10:44.000Z","dateModified":"2023-07-04T15:32:01.808Z","author":{"@type":"Person","name":"三季"},"publisher":{"@type":"Organization","name":"三季的技术博客","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"前言 1. 概述 1.1 学习环境 1.2 学习任务   2. System Init 2.1 OSCCON寄存器配置 - 初始化系统时钟 2.2 GPIO寄存器配置 -  初始化GPIO 2.3 MSCKCON寄存器配置 2.4 CMCONx，x &#x3D; [0, 1] 寄存器配置    前言 之前学习过51单片机，故寻找一个类似的8位单片机进行开发，FMD是国产的可擦写、RISC-V架构"}</script><link rel="canonical" href="http://example.com/2023/07/04/FMD%E5%88%9D%E6%8E%A2/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
   (function () {
       function switchTab() {
           if (!location.hash) {
@@ -29,7 +29,7 @@
       switchTab();
       window.addEventListener('hashchange', switchTab, false);
   })();
-  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="三季的技术博客" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2023-07-04T07:10:44.000Z" title="7/4/2023, 7:10:44 AM">2023-07-04</time>发表</span><span class="level-item"><time dateTime="2023-07-04T12:58:19.533Z" title="7/4/2023, 12:58:19 PM">2023-07-04</time>更新</span><span class="level-item">5 分钟读完 (大约805个字)</span></div></div><h1 class="title is-3 is-size-4-mobile">FMD初探</h1><div class="content"><ul>
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="三季的技术博客" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2023-07-04T07:10:44.000Z" title="7/4/2023, 7:10:44 AM">2023-07-04</time>发表</span><span class="level-item"><time dateTime="2023-07-04T15:32:01.808Z" title="7/4/2023, 3:32:01 PM">2023-07-04</time>更新</span><span class="level-item">11 分钟读完 (大约1582个字)</span></div></div><h1 class="title is-3 is-size-4-mobile">FMD初探</h1><div class="content"><ul>
 <li><a href="#%E5%89%8D%E8%A8%80">前言</a></li>
 <li><a href="#1-%E6%A6%82%E8%BF%B0">1. 概述</a><ul>
 <li><a href="#11-%E5%AD%A6%E4%B9%A0%E7%8E%AF%E5%A2%83">1.1 学习环境</a></li>
@@ -39,6 +39,8 @@
 <li><a href="#2-system-init">2. System Init</a><ul>
 <li><a href="#21-osccon%E5%AF%84%E5%AD%98%E5%99%A8%E9%85%8D%E7%BD%AE---%E5%88%9D%E5%A7%8B%E5%8C%96%E7%B3%BB%E7%BB%9F%E6%97%B6%E9%92%9F">2.1 OSCCON寄存器配置 - 初始化系统时钟</a></li>
 <li><a href="#22-gpio%E5%AF%84%E5%AD%98%E5%99%A8%E9%85%8D%E7%BD%AE----%E5%88%9D%E5%A7%8B%E5%8C%96gpio">2.2 GPIO寄存器配置 -  初始化GPIO</a></li>
+<li><a href="#23-msckcon%E5%AF%84%E5%AD%98%E5%99%A8%E9%85%8D%E7%BD%AE">2.3 MSCKCON寄存器配置</a></li>
+<li><a href="#24-cmconxx--0-1-%E5%AF%84%E5%AD%98%E5%99%A8%E9%85%8D%E7%BD%AE">2.4 CMCONx，x &#x3D; [0, 1] 寄存器配置</a></li>
 </ul>
 </li>
 </ul>
@@ -51,7 +53,7 @@
 <li>这是一款8bit基于EEPROM的RISC-V MCU</li>
 <li>PROGRAM：2k * 14 bit</li>
 <li>DATA：256 * 8 bit</li>
-<li>RAM：128 * 8 bit- <a href="#%E5%89%8D%E8%A8%80">前言</a></li>
+<li>RAM：128 * 8 bit</li>
 </ul>
 </li>
 </ul>
@@ -99,11 +101,11 @@
 </tbody></table>
 <p>一般情况下，我们要关注的是OSCCON寄存器中的<strong>IRCF[2:0]位</strong>和<strong>SCS位</strong>。SCS位是OSCCON中的最低位，<u>决定了MCU使用内部晶振（<code>SCS == 1</code>）还是外部晶振（<code>SCS == 0</code>）</u>，而3bit <strong>IRCF用来对内部高速&#x2F;低速时钟进行分频</strong>，此外<strong>LFMOD是低速内部时钟的频率选择位</strong>，当<code>LFMOD == 1</code>时，内部低速时钟速率为:256kHz，当<code>LFMOD == 0</code>时，内部低速时钟速率为:32kHz。</p>
 <p>一般的，若不选择外部时钟，都优先考虑选择<u>内部高速时钟</u>，故：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LFMOD = <span class="number">0</span>;   <span class="comment">//不选择LIRC作为时钟源</span></span><br><span class="line">IRCF = <span class="number">111</span>;  <span class="comment">//配置HIRC的时钟频率为16Mhz，其它配置请参照手册 表6-2</span></span><br></pre></td></tr></table></figure>
-
-<p>由此可知OSCCON的值应为:<code>OSCCON = 0B01110001</code></p>
-</li>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LFMOD = <span class="number">0</span>;   <span class="comment">//不选择LIRC作为时钟源</span></span><br><span class="line">IRCF = <span class="number">111</span>;  <span class="comment">//配置HIRC的时钟频率为16Mhz，其它配置请参照手册 表6-2</span></span><br></pre></td></tr></table></figure></li>
 </ul>
+<blockquote>
+<p> 由此可知OSCCON的值应为:<code>OSCCON = 0B01110001</code></p>
+</blockquote>
 <h3 id="2-2-GPIO寄存器配置-初始化GPIO"><a href="#2-2-GPIO寄存器配置-初始化GPIO" class="headerlink" title="2.2 GPIO寄存器配置 -  初始化GPIO"></a>2.2 GPIO寄存器配置 -  初始化GPIO</h3><ul>
 <li><table>
 <thead>
@@ -145,7 +147,7 @@
 <td>TRISC[2]</td>
 <td>TRISC[1]</td>
 <td>TRISC[0]</td>
-<td>**11 1111</td>
+<td>++11 1111</td>
 </tr>
 <tr>
 <td>0x05</td>
@@ -171,7 +173,7 @@
 <td>PORTC[2]</td>
 <td>PORTC[1]</td>
 <td>PORTC[0]</td>
-<td>**xx xxxx</td>
+<td>++xx xxxx</td>
 </tr>
 <tr>
 <td>0x95</td>
@@ -197,17 +199,155 @@
 <td>WPUC[2]</td>
 <td>WPUC[1]</td>
 <td>WPUC[0]</td>
-<td>**11 1111</td>
+<td>++11 1111</td>
+</tr>
+<tr>
+<td>0x89</td>
+<td>WPD</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+<td>WPDA</td>
+<td>WPDC1</td>
+<td>WPDC2</td>
+<td>WPDC3</td>
+<td>None</td>
+<td>+++0 000+</td>
+</tr>
+<tr>
+<td>0x81</td>
+<td>OPTION</td>
+<td>&#x2F;PAPU</td>
+<td>INTEDG</td>
+<td>T0CS</td>
+<td>T0SE</td>
+<td>PSA</td>
+<td>PS2</td>
+<td>PS1</td>
+<td>PS0</td>
+<td>1111 1111</td>
 </tr>
 </tbody></table>
-<p>SOP16封装的FT61F02X芯片总共引脚是16枚，除去VCC和GND剩下就是14枚，正好用PORTA+PORTC[5:0]共14bit控制其引脚是否处于**数字输出状态<u>（PORTx[i] &#x3D; 0; 为输出，反之输入）</u><strong>，相应地WPUx寄存器则是控制端口是否处于</strong>弱上拉状态<u>（WPUx[i] &#x3D; 1; 为弱上拉，反之弱下拉）</u>**，在配置上拉状态之前，由TRISx寄存器控制<u>是否使能</u><strong>上拉&#x2F;下拉</strong>。</p>
-<p>特别地，FT61F02X的每个GPIO引脚都可以配置成<strong>弱上拉</strong>，但<strong>弱下拉</strong>不是每个引脚都可以配置的。</p>
+<p>SOP16封装的FT61F02X芯片总共引脚是16枚，除去VCC和GND剩下就是14枚，PORTA+PORTC[5:0]共14bit作为<strong>数据输出寄存器</strong>，通过配置寄存器的值向外输出数据，相应地WPUx寄存器则是控制端口是否处于<strong>弱上拉状态<u>（WPUx[i] &#x3D; 1; 为弱上拉，反之弱下拉）</u><strong>，在配置上拉状态之前，由TRISx寄存器控制IO的方向，</strong>TRISx[i] &#x3D; 1 是输入，反之为输出</strong>。（这里有问题，之后记得更改，PORTx[i]寄存器的理解有偏差，另外得搞清楚上下拉的使用场合。）</p>
+<p>特别地，FT61F02X的每个GPIO引脚都可以配置成<strong>弱上拉</strong>，但<strong>弱下拉</strong>不是每个引脚都可以配置的，但是都是通过WPD寄存器配置的</p>
 <ul>
-<li><strong>弱下拉</strong>在<strong>PORTA</strong>中只有bit4可以被配置，涉及到的寄存器是:<strong>WPDA4</strong></li>
-<li>在<strong>PORTC</strong>中，bit1~bit3都可以被配置，涉及到的寄存器是:<strong>WPDC[3:1]</strong></li>
+<li><strong>弱下拉</strong>在<strong>PORTA</strong>中只有bit4可以被配置，涉及到的寄存器WPD中:<strong>WPDA4</strong></li>
+<li>在<strong>PORTC</strong>中，bit1~bit3都可以被配置，涉及到的寄存器WPD中:<strong>WPDC[3:1]</strong></li>
 </ul>
+<p>OPTION寄存器是中断相关寄存器，其作用如下表:</p>
+</li>
+<li><table>
+<thead>
+<tr>
+<th>地址</th>
+<th>bit位号</th>
+<th>名称</th>
+<th>释义</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x81</td>
+<td>bit7</td>
+<td>&#x2F;PAPU</td>
+<td>无</td>
+<td>为 <strong>1</strong> 时，<strong>关闭</strong>所有PORTA上拉功能， 为 <strong>0</strong> 时，上拉<strong>由WPUA控制</strong></td>
+</tr>
+<tr>
+<td>0x81</td>
+<td>bit6</td>
+<td>INTEDG</td>
+<td>Init PC1 Edge Interrupt Way</td>
+<td>初始化PC1的边沿中断，为 <strong>1</strong> 时，配置为<strong>上升沿</strong>， 反之<strong>下降沿</strong></td>
+</tr>
+<tr>
+<td>0x81</td>
+<td>bit5</td>
+<td>T0CS</td>
+<td>Timer 0 Change Clock Source</td>
+<td>选择定时器0的时钟源，为 <strong>1</strong> 时，由PA2&#x2F;T0CKI（作计数器）提供， 为 <strong>0</strong> 时，由指令时钟（作定时器）提供</td>
+</tr>
+<tr>
+<td>0x81</td>
+<td>bit4</td>
+<td>T0SE</td>
+<td>Timer 0 Select Edge Interrupt Way</td>
+<td>选择定时器边沿触发方式，为 <strong>1</strong> 时，<strong>下降沿</strong>， 反之<strong>上升沿</strong></td>
+</tr>
+<tr>
+<td>0x81</td>
+<td>bit3</td>
+<td>PSA</td>
+<td>Prescaler Allocated</td>
+<td>为 <strong>1</strong> 时，分频电路分配给<strong>WDT后分频器</strong>，反之<strong>Timer0的预分频器</strong></td>
+</tr>
+<tr>
+<td>0x81</td>
+<td>bit2</td>
+<td>PS2</td>
+<td>Prescaler bit2</td>
+<td>PS2\PS1\PS0都是PS，这3个bit用于配置WDT或Timer0的分频比， 具体查看手册 <strong>表7-5</strong></td>
+</tr>
+<tr>
+<td>0x81</td>
+<td>bit1</td>
+<td>PS1</td>
+<td>Prescaler bit1</td>
+<td>PS2\PS1\PS0都是PS，这3个bit用于配置WDT或Timer0的分频比， 具体查看手册 <strong>表7-5</strong></td>
+</tr>
+<tr>
+<td>0x81</td>
+<td>bit0</td>
+<td>PS0</td>
+<td>Prescaler bit0</td>
+<td>PS2\PS1\PS0都是PS，这3个bit用于配置WDT或Timer0的分频比， 具体查看手册 <strong>表7-5</strong></td>
+</tr>
+</tbody></table>
 </li>
 </ul>
+<blockquote>
+<p>由此可知，根据本任务的要求GPIO的配置如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">INTCON = <span class="number">0</span>;         <span class="comment">//暂时禁止所有中断</span></span><br><span class="line"></span><br><span class="line">PORTA = <span class="number">0B</span>00000000;</span><br><span class="line">TRISA = <span class="number">0B</span>01010011;</span><br><span class="line"></span><br><span class="line">PORTC = <span class="number">0B</span>00000000;</span><br><span class="line">TRISC = <span class="number">0B</span>00100000;</span><br><span class="line"></span><br><span class="line">WPUA = <span class="number">0B</span>00000000;</span><br><span class="line">WPUC = <span class="number">0B</span>00000000;</span><br><span class="line"></span><br><span class="line">OPTION = <span class="number">0B</span>00000000;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<h3 id="2-3-MSCKCON寄存器配置"><a href="#2-3-MSCKCON寄存器配置" class="headerlink" title="2.3 MSCKCON寄存器配置"></a>2.3 MSCKCON寄存器配置</h3><ul>
+<li><table>
+<thead>
+<tr>
+<th>地址</th>
+<th>名称</th>
+<th>bit7</th>
+<th>bit6</th>
+<th>bit5</th>
+<th>bit4</th>
+<th>bit3</th>
+<th>bit2</th>
+<th>bit1</th>
+<th>bit0</th>
+<th>复位值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x1B</td>
+<td>MSCKCON</td>
+<td>None</td>
+<td>VREG_OE</td>
+<td>T2CKSRC</td>
+<td>SLVREN</td>
+<td>None</td>
+<td>CKMAVG</td>
+<td>CKCNTI</td>
+<td>None</td>
+<td>0000 +00+</td>
+</tr>
+</tbody></table>
+<p>MSCKCON寄存器涵盖了稳压器、Timer2时钟源、睡眠模式LVR控制、LIRC和HIRC交叉校准4次平均模式控制、LIRC和HIRC的交叉校准功能控制，这些功能和上述表单一一对应，写入<strong>1</strong>就是使能相关功能，反之为关闭。</p>
+<p>值得注意的是，CKCNTI是双晶振校准是否完成的判别位（FLAG），在完成交叉校准后此位会自动清零。</p>
+<p>此外，SLVREN位<strong>仅适用于 LVREN 配置成由指令 SLVREN 控制 LVR</strong>时，此位有效，通过改变SLVREN的值，控制LVR的开关。</p>
+<p>T2CKSRC位用于选择时钟源，并且默认为2倍频，例如当其为1时，Timer2的时钟源为HIRC的2倍（ECCP模式生效），为0时，是指令时钟的2倍。</p>
+<p>VREG_OE用于使能PA4和PC5是否作为稳压器的输出引脚。</p>
+</li>
+</ul>
+<h3 id="2-4-CMCONx，x-x3D-0-1-寄存器配置"><a href="#2-4-CMCONx，x-x3D-0-1-寄存器配置" class="headerlink" title="2.4 CMCONx，x &#x3D; [0, 1] 寄存器配置"></a>2.4 CMCONx，x &#x3D; [0, 1] 寄存器配置</h3><p>  CMCONx寄存器有两个，用于配置C1，C2比较器的输出结果、模式和输入切换，具体配置参考手册 <strong>表13-1</strong></p>
 </div><div class="article-licensing box"><div class="licensing-title"><p>FMD初探</p><p><a href="http://example.com/2023/07/04/FMD初探/">http://example.com/2023/07/04/FMD初探/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>作者</h6><p>三季</p></div></div><div class="level-item is-narrow"><div><h6>发布于</h6><p>2023-07-04</p></div></div><div class="level-item is-narrow"><div><h6>更新于</h6><p>2023-07-04</p></div></div><div class="level-item is-narrow"><div><h6>许可协议</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2023/06/29/C%E6%8C%87%E9%92%88/"><span class="level-item">C指针</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar" src="/img/avatar.jpg" alt="三季"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">三季</p><p class="is-size-6 is-block">onelanp@163.com</p><p class="is-size-6 is-flex justify-content-center"><i class="fas fa-map-marker-alt mr-1"></i><span>Guangdong·Zhongshan</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">文章</p><a href="/archives"><p class="title">3</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">分类</p><a href="/categories"><p class="title">0</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">标签</p><a href="/tags"><p class="title">0</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/OneLanp" target="_blank" rel="noopener">关注我</a></div></div></div><!--!--><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">链接</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://hexo.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Hexo</span></span><span class="level-right"><span class="level-item tag">hexo.io</span></span></a></li></ul></div></div></div><!--!--><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-07-04T07:10:44.000Z">2023-07-04</time></p><p class="title"><a href="/2023/07/04/FMD%E5%88%9D%E6%8E%A2/">FMD初探</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-06-29T03:46:33.000Z">2023-06-29</time></p><p class="title"><a href="/2023/06/29/C%E6%8C%87%E9%92%88/">C指针</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-06-20T14:34:12.000Z">2023-06-20</time></p><p class="title"><a href="/2023/06/20/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/">第一篇博客</a></p></div></article></div></div><div class="card widget" data-type="archives"><div class="card-content"><div class="menu"><h3 class="menu-label">归档</h3><ul class="menu-list"><li><a class="level is-mobile" href="/archives/2023/"><span class="level-start"><span class="level-item">2023</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li></ul></div></div></div><!--!--></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="三季的技术博客" height="28"></a><p class="is-size-7"><span>&copy; 2023 三季</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/OneLanp"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
             article: {
                 highlight: {
